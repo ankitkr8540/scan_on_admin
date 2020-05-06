@@ -13,6 +13,7 @@ import StripAdView from "../Components/StripAdView";
 import { GridView } from "../Components/GridView";
 import { loadCategories } from "../Components/Actions/categoryActions";
 import { connect } from "react-redux";
+import { Home } from "@material-ui/icons";
 
 export class HomeFragment extends Component {
   constructor(props) {
@@ -46,19 +47,18 @@ export class HomeFragment extends Component {
             scrollButtons="auto"
             aria-label="scrollable auto tabs example"
           >
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
-            <Tab icon={<CategoryTab />} />
+            {this.props.categories
+              ? this.props.catagories.map((category) => (
+                  <Tab
+                    icon={
+                      <CategoryTab
+                        icon={category.Icon}
+                        title={category.categoryName}
+                      />
+                    }
+                  />
+                ))
+              : null}
           </Tabs>
         </AppBar>
         <BannerSlider Images={[{ image: "sdfsef" }]} />
@@ -70,14 +70,14 @@ export class HomeFragment extends Component {
   }
 }
 
-export const CategoryTab = () => {
+export const CategoryTab = ({ icon, title }) => {
   return (
     <Box>
-      <Avatar
-        alt="Remy Sharp"
-        variant="square"
-        src="/static/images/avatar/1.jpg"
-      />
+      {icon ? (
+        <Avatar alt="Remy Sharp" variant="square" src={icon} />
+      ) : (
+        <Home />
+      )}
       <Typography variant="body2">Title</Typography>
     </Box>
   );
