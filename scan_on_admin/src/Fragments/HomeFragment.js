@@ -47,13 +47,13 @@ export class HomeFragment extends Component {
             scrollButtons="auto"
             aria-label="scrollable auto tabs example"
           >
-            {this.props.categories
-              ? this.props.catagories.map((category) => (
+            {this.props.catagories
+              ? this.props.catagories.map((catagory) => (
                   <Tab
                     icon={
                       <CategoryTab
-                        icon={category.Icon}
-                        title={category.categoryName}
+                        icon={catagory.Icon}
+                        title={catagory.categoryName}
                       />
                     }
                   />
@@ -72,13 +72,15 @@ export class HomeFragment extends Component {
 
 export const CategoryTab = ({ icon, title }) => {
   return (
-    <Box>
-      {icon ? (
-        <Avatar alt="Remy Sharp" variant="square" src={icon} />
+    <Box textAlign="center">
+      {icon !== "null" ? (
+        <img src={icon} style={{ height: "30px", width: "30px" }} />
       ) : (
         <Home />
       )}
-      <Typography variant="body2">Title</Typography>
+      <Typography variant="body2" textAlign="center">
+        {title}
+      </Typography>
     </Box>
   );
 };

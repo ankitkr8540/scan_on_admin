@@ -1,5 +1,4 @@
 import { firestore } from "../../firebase";
-import { Category } from "@material-ui/icons";
 
 export const loadCategories = () => {
   return (dispatch, getState) => {
@@ -8,12 +7,12 @@ export const loadCategories = () => {
       .orderBy("index")
       .get()
       .then((querySnapshot) => {
-        let categories = [];
+        let catagories = [];
         if (!querySnapshot.empty) {
           querySnapshot.forEach((doc) => {
-            categories.push(doc.data());
+            catagories.push(doc.data());
           });
-          dispatch({ type: "LOAD_CATEGORIES", payload: categories });
+          dispatch({ type: "LOAD_CATEGORIES", payload: catagories });
         }
       })
       .catch((error) => {

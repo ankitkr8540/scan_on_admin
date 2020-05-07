@@ -9,7 +9,7 @@ const DEFAULT_REDUCER = (initstate, action) => {
 
 const rootReducer = combineReducers({
   DEFAULT: DEFAULT_REDUCER,
-  categories: categoryReducer,
+  catagories: categoryReducer,
 });
 
 export default rootReducer;
