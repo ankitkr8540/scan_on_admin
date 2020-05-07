@@ -1,18 +1,19 @@
 import { firestore } from "../../firebase";
 
-export const loadCategories = (onSuccess, onError) => {
+export const loadCategoryPage = (catagory, onSuccess, onError) => {
   return (dispatch, getState) => {
     firestore
       .collection("CATAGORIES")
-      .orderBy("index")
+      .doc(catagory)
+      .collection("TOP_DEALS")
       .get()
       .then((querySnapshot) => {
-        let catagories = [];
+        let pagedata = [];
         if (!querySnapshot.empty) {
           querySnapshot.forEach((doc) => {
-            catagories.push(doc.data());
+            pagedata.push(doc.data());
           });
-          dispatch({ type: "LOAD_CATEGORIES", payload: catagories });
+          dispatch({ type: "LOAD_PAGE", payload: pagedata, catagory });
           onSuccess();
         }
       })
