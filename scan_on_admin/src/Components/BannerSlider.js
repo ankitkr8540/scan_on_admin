@@ -23,15 +23,22 @@ export const BannerSlider = (props) => {
       >
         {props.Images.map((step, index) => (
           <div
-            key={step.label}
+            key={index}
             style={{
               width: "100%",
-              height: "150px",
-              backgroundColor: blueGrey[400],
             }}
           >
             {Math.abs(activeStep - index) <= 2 ? (
-              <img style={{ width: "100%" }} src={step.image} alt="" />
+              <img
+                style={{
+                  width: "100%",
+                  height: "250px",
+                  objectFit: "scale-down",
+                  backgroundColor: step.background,
+                }}
+                src={step.banner}
+                alt=""
+              />
             ) : null}
           </div>
         ))}

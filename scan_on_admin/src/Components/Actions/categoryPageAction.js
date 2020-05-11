@@ -6,6 +6,7 @@ export const loadCategoryPage = (catagory, onSuccess, onError) => {
       .collection("CATAGORIES")
       .doc(catagory)
       .collection("TOP_DEALS")
+      .orderBy("index")
       .get()
       .then((querySnapshot) => {
         let pagedata = [];

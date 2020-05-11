@@ -28,6 +28,7 @@ export class HomeFragment extends Component {
     this.state = {
       loading: true,
       value: 0,
+      Page: "HOME",
     };
   }
   handleChange = (event, newValue) => {
@@ -87,7 +88,31 @@ export class HomeFragment extends Component {
                 : null}
             </Tabs>
           </AppBar>
-          <BannerSlider Images={[{ image: "sdfsef" }]} />
+
+          {this.props.categoryPages
+            ? this.props.categoryPages[this.state.Page].map((item, index) => {
+                switch (item.view_type) {
+                  case 0:
+                    let banners = [];
+                    for (
+                      let index = 1;
+                      index < item.no_of_banners + 1;
+                      index++
+                    ) {
+                      const banner = item["banner_" + index];
+                      const background =
+                        item["banner_" + index + "_background"];
+
+                      banners.push({ banner, background });
+                    }
+                    return <BannerSlider Images={banners} />;
+
+                  default:
+                    break;
+                }
+              })
+            : null}
+
           <HorizontalScroller />
           <StripAdView />
           <GridView />
@@ -118,15 +143,15 @@ export const CategoryTab = ({ icon, title }) => {
 const mapStateToProps = (state) => {
   return {
     catagories: state.catagories,
-    catagoryPages: state.catagoryPages,
+    categoryPages: state.categoryPages,
   };
 };
 const mapDispatchToProps = (dispatch) => {
   return {
     loadCategories: (onSuccess, onError) =>
       dispatch(loadCategories(onSuccess, onError)),
-    loadPage: (catagory, onSuccess, onError) =>
-      dispatch(loadCategoryPage(catagory, onSuccess, onError)),
+    loadPage: (category, onSuccess, onError) =>
+      dispatch(loadCategoryPage(category, onSuccess, onError)),
   };
 };
 
