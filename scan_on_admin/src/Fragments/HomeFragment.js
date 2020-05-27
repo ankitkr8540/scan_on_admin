@@ -8,7 +8,17 @@ import Box from "@material-ui/core/Box";
 import {
   Container,
   Avatar,
+  Fab,
+  Dialog,
+  Toolbar,
   Backdrop,
+  Slide,
+  IconButton,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   CircularProgress,
 } from "@material-ui/core";
 import BannerSlider from "../Components/BannerSlider";
@@ -18,8 +28,12 @@ import StripAdView from "../Components/StripAdView";
 import { GridView } from "../Components/GridView";
 import { loadCategories } from "../Components/Actions/categoryActions";
 import { connect } from "react-redux";
-import { Home } from "@material-ui/icons";
+import { Home, Add, Close } from "@material-ui/icons";
 import { loadCategoryPage } from "../Components/Actions/categoryPageAction";
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 export class HomeFragment extends Component {
   constructor(props) {
@@ -29,6 +43,7 @@ export class HomeFragment extends Component {
       loading: true,
       value: 0,
       Page: "HOME",
+      addDialog: false,
     };
   }
   handleChange = (event, newValue) => {
@@ -183,7 +198,71 @@ export class HomeFragment extends Component {
                 }
               })
             : null}
+          <Fab
+            color="primary"
+            aria-label="add"
+            onClick={(e) => this.setState({ addDialog: true })}
+            style={{ position: "fixed", bottom: "50px", right: "50px" }}
+          >
+            <Add />
+          </Fab>
         </Container>
+        <Dialog
+          fullScreen
+          open={this.state.addDialog}
+          onClose={(e) =>
+            this.setState({
+              addDialog: false,
+            })
+          }
+          TransitionComponent={Transition}
+        >
+          <AppBar>
+            <Toolbar>
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={(e) =>
+                  this.setState({
+                    addDialog: false,
+                  })
+                }
+                aria-label="close"
+              >
+                <Close />
+              </IconButton>
+              <Typography variant="h6">Add Section</Typography>
+              <Button
+                autoFocus
+                color="inherit"
+                style={{ position: "absolute", right: 0 }}
+                onClick={(e) =>
+                  this.setState({
+                    addDialog: false,
+                  })
+                }
+              >
+                save
+              </Button>
+            </Toolbar>
+          </AppBar>
+          <Toolbar />
+          <Box padding="16px">
+            <FormControl>
+              <InputLabel id="demo-simple-select-label">View Type</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={0}
+              >
+                <MenuItem value={0}>BANNER SLIDER</MenuItem>
+                <MenuItem value={1}>STRIP AD</MenuItem>
+                <MenuItem value={2}>HORIZONTAL SCROLLER</MenuItem>
+                <MenuItem value={3}>GRID VIEW</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Dialog>
         <Backdrop style={{ zIndex: 1500 }} open={this.state.loading}>
           <CircularProgress color="primary" />
         </Backdrop>
