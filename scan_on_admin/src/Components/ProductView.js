@@ -14,9 +14,11 @@ export const ProductView = (props) => {
           backgroundColor: grey[50],
         }}
       />
-      <Typography variant="subtitle1">{props.item.title}</Typography>
+      <Box width="110px" component="div" textOverflow="ellipsis">
+        <Typography variant="subtitle1">{props.item.title}</Typography>
+      </Box>
       <Typography variant="subtitle2">
-        <span style={{ color: green.A700 }}>{props.item.subtitle}</span>Tittle
+        <span style={{ color: green.A700 }}>{props.item.subtitle}</span>
       </Typography>
       <Typography variant="h6">Rs.{props.item.price}</Typography>
     </Box>

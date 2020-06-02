@@ -21,6 +21,8 @@ import {
   Select,
   MenuItem,
   CircularProgress,
+  FormControlLabel,
+  Checkbox,
 } from "@material-ui/core";
 import BannerSlider from "../Components/BannerSlider";
 import ProductView from "../Components/ProductView";
@@ -38,6 +40,7 @@ import {
   FormatColorFill,
 } from "@material-ui/icons";
 import { loadCategoryPage } from "../Components/Actions/categoryPageAction";
+import { firestore } from "../firebase";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -57,6 +60,33 @@ export class HomeFragment extends Component {
       view_type: 0,
     };
   }
+  LoadLatestProduct = () => {
+    firestore
+      .collection("PRODUCTS")
+      .orderBy("added_on", "desc")
+      .limit(8)
+      .get()
+      .then((querySnapshot) => {
+        let productlist = [];
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach((doc) => {
+            let data = {
+              id: doc.id,
+              image: doc.data().product_image_1,
+              title: doc.data().product_title,
+              price: doc.data().product_price,
+            };
+            productlist.push(data);
+          });
+        }
+        this.setState({
+          productlist,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
   handleChange = (event, newValue) => {
     this.setState({
       value: newValue,
@@ -405,6 +435,18 @@ export class HomeFragment extends Component {
                   Layout Background
                 </Button>
               </label>
+              <h4>Select Product:</h4>
+              <Box display="flex" flexWrap="true" bgcolor="#00000010">
+                {this.state.productlist === undefined
+                  ? this.LoadLatestProduct()
+                  : this.state.productlist.map((item, index) => (
+                      <FormControlLabel
+                        control={<Checkbox />}
+                        label={<ProductView item={item} />}
+                        labelPlacement="bottom"
+                      />
+                    ))}
+              </Box>
             </FormControl>
           </Box>
         </Dialog>
