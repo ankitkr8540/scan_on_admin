@@ -38,6 +38,7 @@ import {
   ColorizeTwoTone,
   Delete,
   FormatColorFill,
+  Search,
 } from "@material-ui/icons";
 import { loadCategoryPage } from "../Components/Actions/categoryPageAction";
 import { firestore } from "../firebase";
@@ -60,6 +61,13 @@ export class HomeFragment extends Component {
       view_type: 0,
     };
   }
+
+  handleChange = (event, newValue) => {
+    this.setState({
+      value: newValue,
+    });
+  };
+
   LoadLatestProduct = () => {
     firestore
       .collection("PRODUCTS")
@@ -87,10 +95,45 @@ export class HomeFragment extends Component {
         console.log(error);
       });
   };
-  handleChange = (event, newValue) => {
+
+  searchProducts = () => {
+    if (!this.state.search) {
+      this.LoadLatestProduct();
+      return;
+    }
+
     this.setState({
-      value: newValue,
+      searching: true,
     });
+    let keywords = this.state.search.split(" ");
+    firestore
+      .collection("PRODUCTS")
+      .where("tags", "array-contains-any", keywords)
+      .get()
+      .then((querySnapshot) => {
+        let productlist = [];
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach((doc) => {
+            let data = {
+              id: doc.id,
+              image: doc.data().product_image_1,
+              title: doc.data().product_title,
+              price: doc.data().product_price,
+            };
+            productlist.push(data);
+          });
+        }
+        this.setState({
+          productlist,
+          searching: false,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        this.setState({
+          searching: false,
+        });
+      });
   };
 
   componentDidMount() {
@@ -436,17 +479,37 @@ export class HomeFragment extends Component {
                 </Button>
               </label>
               <h4>Select Product:</h4>
-              <Box display="flex" flexWrap="true" bgcolor="#00000010">
-                {this.state.productlist === undefined
-                  ? this.LoadLatestProduct()
-                  : this.state.productlist.map((item, index) => (
-                      <FormControlLabel
-                        control={<Checkbox />}
-                        label={<ProductView item={item} />}
-                        labelPlacement="bottom"
-                      />
-                    ))}
+              <Box display="flex">
+                <TextField
+                  name="search"
+                  label="Search"
+                  onChange={this.onFieldChange}
+                  variant="outlined"
+                  size="small"
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={(e) => this.searchProducts()}
+                >
+                  Search
+                </Button>
               </Box>
+              {this.state.searching ? (
+                <CircularProgress />
+              ) : (
+                <Box display="flex" flexWrap="true" bgcolor="#00000010">
+                  {this.state.productlist === undefined
+                    ? this.LoadLatestProduct()
+                    : this.state.productlist.map((item, index) => (
+                        <FormControlLabel
+                          control={<Checkbox />}
+                          label={<ProductView item={item} />}
+                          labelPlacement="bottom"
+                        />
+                      ))}
+                </Box>
+              )}
             </FormControl>
           </Box>
         </Dialog>
