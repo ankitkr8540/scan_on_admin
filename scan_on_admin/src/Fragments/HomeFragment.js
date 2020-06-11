@@ -357,7 +357,10 @@ export class HomeFragment extends Component {
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
-                onChange={this.onFieldChange}
+                onChange={(e) => {
+                  this.onFieldChange(e);
+                  this.state.images.splice(0, this.state.images.length);
+                }}
                 name="view_type"
                 defaultValue={0}
               >
@@ -366,6 +369,7 @@ export class HomeFragment extends Component {
                 <MenuItem value={2}>HORIZONTAL SCROLLER</MenuItem>
                 <MenuItem value={3}>GRID VIEW</MenuItem>
               </Select>
+              <br />
               <TextField
                 label="Position"
                 id="outlined-size-small"
@@ -376,141 +380,163 @@ export class HomeFragment extends Component {
                 onChange={this.onFieldChange}
                 margin="dense"
               />
+            </FormControl>
+            <br />
 
-              <Box display="flex" flexWrap="true">
-                {this.state.images.map((item, index) => (
-                  <Box margin="12px">
-                    <img
-                      src={URL.createObjectURL(item)}
-                      style={{
-                        height: "90px",
-                        width:
-                          this.state.view_type === 0
-                            ? "160px"
-                            : this.state.view_type === 1
-                            ? "210px"
-                            : 0,
-                        objectFit: "scale-down",
-                        backgroundColor: this.state.colors[index],
-                      }}
-                    />
-                    <br />
-                    <input
-                      id={"contained-button-" + index}
-                      type="color"
-                      hidden
-                      onChange={(e) => {
-                        let colors = this.state.colors;
-                        colors[index] = e.target.value;
-                        this.setState({
-                          colors,
-                        });
-                      }}
-                      defaultValue="#000000"
-                    />
+            <Box display="flex" flexWrap="true">
+              {this.state.images.map((item, index) => (
+                <Box margin="12px">
+                  <img
+                    src={URL.createObjectURL(item)}
+                    style={{
+                      height: "90px",
+                      width:
+                        this.state.view_type === 0
+                          ? "160px"
+                          : this.state.view_type === 1
+                          ? "210px"
+                          : 0,
+                      objectFit: "scale-down",
+                      backgroundColor: this.state.colors[index],
+                    }}
+                  />
+                  <br />
+                  <input
+                    id={"contained-button-" + index}
+                    type="color"
+                    hidden
+                    onChange={(e) => {
+                      let colors = this.state.colors;
+                      colors[index] = e.target.value;
+                      this.setState({
+                        colors,
+                      });
+                    }}
+                    defaultValue="#000000"
+                  />
+                  <IconButton
+                    aria-label="delete"
+                    onClick={(e) => this.removeImage(index)}
+                  >
+                    <Delete />
+                  </IconButton>
+                  <label htmlFor={"contained-button-" + index}>
                     <IconButton
-                      aria-label="delete"
-                      onClick={(e) => this.removeImage(index)}
+                      color="primary"
+                      aria-label="upload picture"
+                      component="span"
                     >
-                      <Delete />
+                      <FormatColorFill />
                     </IconButton>
-                    <label htmlFor={"contained-button-" + index}>
-                      <IconButton
-                        color="primary"
-                        aria-label="upload picture"
-                        component="span"
-                      >
-                        <FormatColorFill />
-                      </IconButton>
-                    </label>
-                  </Box>
-                ))}
-              </Box>
+                  </label>
+                </Box>
+              ))}
+            </Box>
 
-              <input
-                accept="image/*"
-                id="contained-button-file"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    let images = this.state.images;
-                    images.push(e.target.files[0]);
-                    this.setState({
-                      images,
-                    });
-                  }
-                }}
-                hidden
-                name="images"
-                type="file"
-              />
-              {this.state.view_type === 0 && this.state.images.length < 8 ? (
-                <label htmlFor="contained-button-file">
-                  <Button variant="contained" color="primary" component="span">
-                    Add Image
-                  </Button>
-                </label>
-              ) : null}
-              {this.state.view_type === 1 && this.state.images.length < 1 ? (
-                <label htmlFor="contained-button-file">
-                  <Button variant="contained" color="primary" component="span">
-                    Add Image
-                  </Button>
-                </label>
-              ) : null}
+            <input
+              accept="image/*"
+              id="contained-button-file"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  let images = this.state.images;
+                  images.push(e.target.files[0]);
+                  this.setState({
+                    images,
+                  });
+                }
+              }}
+              hidden
+              name="images"
+              type="file"
+            />
+            <br />
 
-              <Box style={{ backgroundColor: this.state.layout_bg }}>
-                <TextField id="filled-basic" label="Title" variant="filled" />
-              </Box>
-              <input
-                id={"contained-button-title"}
-                type="color"
-                hidden
-                onChange={this.onFieldChange}
-                name="layout_bg"
-                defaultValue="#ffffff"
-              />
-              <label htmlFor={"contained-button-title"}>
-                <Button
-                  color="primary"
-                  aria-label="upload picture"
-                  component="span"
-                >
-                  Layout Background
+            {this.state.view_type === 0 && this.state.images.length < 8 ? (
+              <label htmlFor="contained-button-file">
+                <Button variant="contained" color="primary" component="span">
+                  Add Image
                 </Button>
               </label>
-              <h4>Select Product:</h4>
-              <Box display="flex">
-                <TextField
-                  name="search"
-                  label="Search"
-                  onChange={this.onFieldChange}
-                  variant="outlined"
-                  size="small"
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={(e) => this.searchProducts()}
-                >
-                  Search
+            ) : null}
+            {this.state.view_type === 1 && this.state.images.length < 1 ? (
+              <label htmlFor="contained-button-file">
+                <Button variant="contained" color="primary" component="span">
+                  Add Image
                 </Button>
-              </Box>
-              {this.state.searching ? (
-                <CircularProgress />
-              ) : (
-                <Box display="flex" flexWrap="true" bgcolor="#00000010">
-                  {this.state.productlist === undefined
-                    ? this.LoadLatestProduct()
-                    : this.state.productlist.map((item, index) => (
-                        <FormControlLabel
-                          control={<Checkbox />}
-                          label={<ProductView item={item} />}
-                          labelPlacement="bottom"
-                        />
-                      ))}
+              </label>
+            ) : null}
+            <br />
+
+            {(this.state.view_type === 2 || this.state.view_type === 3) && (
+              <div>
+                <Box style={{ backgroundColor: this.state.layout_bg }}>
+                  <TextField
+                    id="filled-basic"
+                    label="Title"
+                    style={{ width: "100%" }}
+                    variant="standard"
+                  />
                 </Box>
-              )}
-            </FormControl>
+                <input
+                  id={"contained-button-title"}
+                  type="color"
+                  hidden
+                  onChange={this.onFieldChange}
+                  name="layout_bg"
+                  defaultValue="#ffffff"
+                />
+                <label htmlFor={"contained-button-title"}>
+                  <Button
+                    color="primary"
+                    aria-label="upload picture"
+                    component="span"
+                  >
+                    Layout Background
+                  </Button>
+                </label>
+                <h4>Select Product:</h4>
+                <Box display="flex">
+                  <TextField
+                    name="search"
+                    style={{ flexGrow: 1 }}
+                    label="Search"
+                    onChange={this.onFieldChange}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={(e) => this.searchProducts()}
+                  >
+                    Search
+                  </Button>
+                </Box>
+                <br />
+
+                {this.state.searching ? (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    bgcolor="#00000010"
+                  >
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <Box display="flex" flexWrap="true" bgcolor="#00000010">
+                    {this.state.productlist === undefined
+                      ? this.LoadLatestProduct()
+                      : this.state.productlist.map((item, index) => (
+                          <FormControlLabel
+                            control={<Checkbox />}
+                            label={<ProductView item={item} />}
+                            labelPlacement="bottom"
+                          />
+                        ))}
+                  </Box>
+                )}
+              </div>
+            )}
           </Box>
         </Dialog>
         <Backdrop style={{ zIndex: 1500 }} open={this.state.loading}>
