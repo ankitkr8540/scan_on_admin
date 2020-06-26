@@ -3,18 +3,55 @@ import React from "react";
 import SwipeableViews from "react-swipeable-views";
 import { autoPlay } from "react-swipeable-views-utils";
 import { blueGrey } from "@material-ui/core/colors";
+import { IconButton, MenuItem, Menu } from "@material-ui/core";
+import MoreVert from "@material-ui/icons/MoreVert";
 
 const AutoPlaySwipeableViews = autoPlay(SwipeableViews);
 
 export const BannerSlider = (props) => {
-  const [activeStep, setActiveStep] = React.useState(0);
-  const theme = useTheme();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
   const handleStepChange = (step) => {
     setActiveStep(step);
   };
+  const [activeStep, setActiveStep] = React.useState(0);
+  const theme = useTheme();
 
   return (
     <div>
+      <div style={{ backgroundColor: "white", textAlign: "right" }}>
+        <IconButton
+          aria-label="more"
+          aria-controls="long-menu"
+          aria-haspopup="true"
+          onClick={handleClick}
+        >
+          <MoreVert />
+        </IconButton>
+        <Menu
+          id="long-menu"
+          anchorEl={anchorEl}
+          keepMounted
+          open={open}
+          onClose={handleClose}
+          PaperProps={{
+            style: {
+              width: "20ch",
+            },
+          }}
+        >
+          <MenuItem onClick={handleClose}>Edit</MenuItem>
+          <MenuItem onClick={handleClose}>Delete</MenuItem>
+        </Menu>
+      </div>
       <AutoPlaySwipeableViews
         axis={theme.direction === "rtl" ? "x-reverse" : "x"}
         index={activeStep}
