@@ -12,7 +12,7 @@ export const loadCategoryPage = (catagory, onSuccess, onError) => {
         let pagedata = [];
         if (!querySnapshot.empty) {
           querySnapshot.forEach((doc) => {
-            pagedata.push(doc.data());
+            pagedata.push({ id: doc.id, ...doc.data() });
           });
         }
         dispatch({ type: "LOAD_PAGE", payload: pagedata, catagory });

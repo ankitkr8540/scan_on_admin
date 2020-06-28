@@ -3,7 +3,7 @@ import { Box } from "@material-ui/core";
 import { IconButton, MenuItem, Menu } from "@material-ui/core";
 import MoreVert from "@material-ui/icons/MoreVert";
 
-export const StripAdView = ({ image, background }) => {
+export const StripAdView = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
@@ -39,17 +39,24 @@ export const StripAdView = ({ image, background }) => {
           }}
         >
           <MenuItem onClick={handleClose}>Edit</MenuItem>
-          <MenuItem onClick={handleClose}>Delete</MenuItem>
+          <MenuItem
+            onClick={() => {
+              props.delete();
+              handleClose();
+            }}
+          >
+            Delete
+          </MenuItem>
         </Menu>
       </div>
       <img
         style={{
           height: "100px",
           width: "100%",
-          background: background,
+          background: props.background,
           objectFit: "scale-down",
         }}
-        src={image}
+        src={props.image}
       />
     </Box>
   );
