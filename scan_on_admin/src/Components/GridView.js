@@ -39,7 +39,14 @@ export const GridView = (props) => {
             },
           }}
         >
-          <MenuItem onClick={handleClose}>Edit</MenuItem>
+          <MenuItem
+            onClick={() => {
+              props.edit();
+              handleClose();
+            }}
+          >
+            Edit
+          </MenuItem>
           <MenuItem
             onClick={() => {
               props.delete();

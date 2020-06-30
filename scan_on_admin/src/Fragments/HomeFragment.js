@@ -175,14 +175,29 @@ export class HomeFragment extends Component {
   removeImage = (index) => {
     let images = this.state.images;
     let colors = this.state.colors;
-
+    let image = images[index];
     images.splice(index, 1);
     colors.splice(index, 1);
 
-    this.setState({
-      images,
-      colors,
-    });
+    try {
+      if (image.startsWith("https")) {
+        this.setState(
+          { loading: true },
+          this.deleteImages([image], 0, () => {
+            this.setState({
+              loading: false,
+              images,
+              colors,
+            });
+          })
+        );
+      }
+    } catch (error) {
+      this.setState({
+        images,
+        colors,
+      });
+    }
   };
 
   uploadProductSection = () => {
@@ -270,9 +285,16 @@ export class HomeFragment extends Component {
           }
           const onComplete = () => {
             let sections = this.props.categoryPages[this.state.Page];
-            sections.push(data);
-            sections.sort((a, b) => a.index - b.index);
-
+            if (this.state.editMode) {
+              data["id"] = this.state.doc_id;
+              let section = sections.filter(
+                (item) => item.id === this.state.doc_id
+              )[0];
+              sections[sections.indexOf(section)] = data;
+            } else {
+              sections.push(data);
+              sections.sort((a, b) => a.index - b.index);
+            }
             this.props.addSection(this.state.Page, sections);
 
             this.setState({
@@ -282,26 +304,45 @@ export class HomeFragment extends Component {
               view_type: 0,
               loading: false,
               addDialog: false,
+              editMode: false,
               selectedProducts: [],
               layout_title: null,
               layout_background: null,
             });
           };
-          firestore
-            .collection("CATAGORIES")
-            .doc(this.state.Page)
-            .collection("TOP_DEALS")
-            .add(data)
-            .then(function (doc) {
-              data["id"] = doc.id;
-              onComplete();
-            })
-            .catch((err) => {
-              this.setState({
-                loading: false,
+          if (this.state.editMode) {
+            firestore
+              .collection("CATAGORIES")
+              .doc(this.state.Page)
+              .collection("TOP_DEALS")
+              .doc(this.state.doc_id)
+              .set(data)
+              .then(function (doc) {
+                onComplete();
+              })
+              .catch((err) => {
+                this.setState({
+                  loading: false,
+                });
+                //error
               });
-              //error
-            });
+          } else {
+            firestore
+              .collection("CATAGORIES")
+              .doc(this.state.Page)
+              .collection("TOP_DEALS")
+              .add(data)
+              .then(function (doc) {
+                data["id"] = doc.id;
+                onComplete();
+              })
+              .catch((err) => {
+                this.setState({
+                  loading: false,
+                });
+                //error
+              });
+          }
         });
 
         break;
@@ -426,38 +467,59 @@ export class HomeFragment extends Component {
     const uploadAgain = (images, index, urls, onCompleted) =>
       this.uploadImages(images, index, urls, onCompleted);
     let file = images[index];
-    var ts = String(new Date().getTime()),
-      i = 0;
-    this.state.out = "";
-    for (i = 0; i < ts.length; i += 2) {
-      this.state.out += Number(ts.substr(i, 2)).toString(36);
-    }
-
-    let filename = "banner" + this.state.out;
-
-    var uploadTask = storageRef
-      .child("bannerads/" + filename + ".jpg")
-      .put(file); // change the name of bannerads to banners
-
-    uploadTask.on(
-      "state_changed",
-      function (snapshot) {
-        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log("Upload is " + progress + "% done");
-      },
-      function (error) {},
-      function () {
-        uploadTask.snapshot.ref.getDownloadURL().then((downloadUrl) => {
-          urls.push(downloadUrl);
-          index++;
-          if (index < images.length) {
-            uploadAgain(images, index, urls, onCompleted);
-          } else {
-            onCompleted();
-          }
-        });
+    try {
+      if (file.startsWith("https")) {
+        urls.push(file);
+        index++;
+        if (index < images.length) {
+          uploadAgain(images, index, urls, onCompleted);
+        } else {
+          onCompleted();
+        }
       }
-    );
+    } catch (error) {
+      var ts = String(new Date().getTime()),
+        i = 0;
+      this.state.out = "";
+      for (i = 0; i < ts.length; i += 2) {
+        this.state.out += Number(ts.substr(i, 2)).toString(36);
+      }
+
+      let filename = "banner" + this.state.out;
+
+      var uploadTask = storageRef
+        .child("bannerads/" + filename + ".jpg")
+        .put(file); // change the name of bannerads to banners
+
+      uploadTask.on(
+        "state_changed",
+        function (snapshot) {
+          var progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log("Upload is " + progress + "% done");
+        },
+        function (error) {},
+        function () {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadUrl) => {
+            urls.push(downloadUrl);
+            index++;
+            if (index < images.length) {
+              uploadAgain(images, index, urls, onCompleted);
+            } else {
+              onCompleted();
+            }
+          });
+        }
+      );
+    }
+  };
+
+  renderImageUrl = (item) => {
+    try {
+      return URL.createObjectURL(item);
+    } catch (error) {
+      return item;
+    }
   };
 
   render() {
@@ -522,6 +584,7 @@ export class HomeFragment extends Component {
                     case 0:
                       let banners = [];
                       let images = [];
+                      let colors = [];
                       for (
                         let index = 1;
                         index < item.no_of_banners + 1;
@@ -533,9 +596,21 @@ export class HomeFragment extends Component {
 
                         banners.push({ banner, background });
                         images.push(banner);
+                        colors.push(background);
                       }
                       return (
                         <BannerSlider
+                          edit={() => {
+                            this.setState({
+                              view_type: item.view_type,
+                              position: item.index,
+                              images: images,
+                              colors: colors,
+                              addDialog: true,
+                              editMode: true,
+                              doc_id: item.id,
+                            });
+                          }}
                           delete={() =>
                             this.setState(
                               {
@@ -747,7 +822,7 @@ export class HomeFragment extends Component {
           <Fab
             color="primary"
             aria-label="add"
-            onClick={(e) => this.setState({ addDialog: true })}
+            onClick={(e) => this.setState({ editMode: false, addDialog: true })}
             style={{ position: "fixed", bottom: "50px", right: "50px" }}
           >
             <Add />
@@ -777,7 +852,9 @@ export class HomeFragment extends Component {
               >
                 <Close />
               </IconButton>
-              <Typography variant="h6">Add Section</Typography>
+              <Typography variant="h6">
+                {this.state.editMode ? "Edit Section" : "Add Section"}
+              </Typography>
               <Button
                 autoFocus
                 color="inherit"
@@ -804,7 +881,7 @@ export class HomeFragment extends Component {
                   });
                 }}
                 name="view_type"
-                defaultValue={0}
+                defaultValue={this.state.view_type}
               >
                 <MenuItem value={0}>BANNER SLIDER</MenuItem>
                 <MenuItem value={1}>STRIP AD</MenuItem>
@@ -818,6 +895,7 @@ export class HomeFragment extends Component {
                 variant="outlined"
                 type="number"
                 name="position"
+                defaultValue={this.state.position}
                 size="small"
                 error={this.state.positionError !== ""}
                 helperText={this.state.positionError}
@@ -831,7 +909,7 @@ export class HomeFragment extends Component {
               {this.state.images.map((item, index) => (
                 <Box margin="12px">
                   <img
-                    src={URL.createObjectURL(item)}
+                    src={this.renderImageUrl(item)}
                     style={{
                       height: "90px",
                       width:
