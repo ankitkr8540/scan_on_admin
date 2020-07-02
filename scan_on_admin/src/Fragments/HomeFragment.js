@@ -117,6 +117,7 @@ export class HomeFragment extends Component {
       .where("tags", "array-contains-any", keywords)
       .get()
       .then((querySnapshot) => {
+        console.log("working");
         let productlist = [];
         if (!querySnapshot.empty) {
           querySnapshot.forEach((doc) => {
@@ -204,18 +205,41 @@ export class HomeFragment extends Component {
     this.setState({
       loading: true,
     });
-    let data = {
-      view_type: this.state.view_type,
-      layout_title: this.state.layout_title,
-      index: parseInt(this.state.position),
-      layout_background: this.state.layout_bg,
-      products: this.state.selectedProducts,
-    };
+    let data;
+    if (this.state.editMode) {
+      let products = [];
+      this.state.selectedProducts.forEach((element) => {
+        products.push(element.id);
+      });
+      data = {
+        view_type: this.state.view_type,
+        layout_title: this.state.layout_title,
+        index: parseInt(this.state.position),
+        layout_background: this.state.layout_bg,
+        products,
+      };
+    } else {
+      data = {
+        view_type: this.state.view_type,
+        layout_title: this.state.layout_title,
+        index: parseInt(this.state.position),
+        layout_background: this.state.layout_bg,
+        products: this.state.selectedProducts,
+      };
+    }
 
     const onComplete = () => {
       let sections = this.props.categoryPages[this.state.Page];
-      sections.push(data);
-      sections.sort((a, b) => a.index - b.index);
+      if (this.state.editMode) {
+        data["id"] = this.state.doc_id;
+        let section = sections.filter(
+          (item) => item.id === this.state.doc_id
+        )[0];
+        sections[sections.indexOf(section)] = data;
+      } else {
+        sections.push(data);
+        sections.sort((a, b) => a.index - b.index);
+      }
 
       this.props.addSection(this.state.Page, sections);
 
@@ -226,26 +250,45 @@ export class HomeFragment extends Component {
         view_type: 0,
         loading: false,
         addDialog: false,
+        editMode: false,
         selectedProducts: [],
         layout_title: null,
         layout_background: null,
       });
     };
-    firestore
-      .collection("CATAGORIES")
-      .doc(this.state.Page)
-      .collection("TOP_DEALS")
-      .add(data)
-      .then(function (doc) {
-        data["id"] = doc.id;
-        onComplete();
-      })
-      .catch((err) => {
-        this.setState({
-          loading: false,
+    if (this.state.editMode) {
+      firestore
+        .collection("CATAGORIES")
+        .doc(this.state.Page)
+        .collection("TOP_DEALS")
+        .doc(this.state.doc_id)
+        .set(data)
+        .then(function (doc) {
+          onComplete();
+        })
+        .catch((err) => {
+          this.setState({
+            loading: false,
+          });
+          //error
         });
-        //error
-      });
+    } else {
+      firestore
+        .collection("CATAGORIES")
+        .doc(this.state.Page)
+        .collection("TOP_DEALS")
+        .add(data)
+        .then(function (doc) {
+          data["id"] = doc.id;
+          onComplete();
+        })
+        .catch((err) => {
+          this.setState({
+            loading: false,
+          });
+          //error
+        });
+    }
   };
 
   save = () => {
@@ -369,9 +412,16 @@ export class HomeFragment extends Component {
 
           const onComplete = () => {
             let sections = this.props.categoryPages[this.state.Page];
-            sections.push(data);
-            sections.sort((a, b) => a.index - b.index);
-
+            if (this.state.editMode) {
+              data["id"] = this.state.doc_id;
+              let section = sections.filter(
+                (item) => item.id === this.state.doc_id
+              )[0];
+              sections[sections.indexOf(section)] = data;
+            } else {
+              sections.push(data);
+              sections.sort((a, b) => a.index - b.index);
+            }
             this.props.addSection(this.state.Page, sections);
 
             this.setState({
@@ -382,26 +432,47 @@ export class HomeFragment extends Component {
               loading: false,
               addDialog: false,
               selectedProducts: [],
+              editMode: false,
               layout_title: null,
               layout_background: null,
             });
           };
-          firestore
-            .collection("CATAGORIES")
-            .doc(this.state.Page)
-            .collection("TOP_DEALS")
-            .add(data)
-            .then(function (doc) {
-              data["id"] = doc.id;
-              onComplete();
-            })
-            .catch((err) => {
-              this.setState({
-                loading: false,
+
+          if (this.state.editMode) {
+            firestore
+              .collection("CATAGORIES")
+              .doc(this.state.Page)
+              .collection("TOP_DEALS")
+              .doc(this.state.doc_id)
+              .set(data)
+              .then(function (doc) {
+                onComplete();
+              })
+              .catch((err) => {
+                this.setState({
+                  loading: false,
+                });
+                //error
               });
-              //error
-            });
+          } else {
+            firestore
+              .collection("CATAGORIES")
+              .doc(this.state.Page)
+              .collection("TOP_DEALS")
+              .add(data)
+              .then(function (doc) {
+                data["id"] = doc.id;
+                onComplete();
+              })
+              .catch((err) => {
+                this.setState({
+                  loading: false,
+                });
+                //error
+              });
+          }
         });
+
         break;
       case 2:
         if (!this.state.layout_title) {
@@ -644,6 +715,17 @@ export class HomeFragment extends Component {
                     case 1:
                       return (
                         <StripAdView
+                          edit={() => {
+                            this.setState({
+                              view_type: item.view_type,
+                              position: item.index,
+                              images: [item.strip_ad_banner],
+                              colors: [item.background],
+                              addDialog: true,
+                              editMode: true,
+                              doc_id: item.id,
+                            });
+                          }}
                           delete={() =>
                             this.setState(
                               {
@@ -680,6 +762,7 @@ export class HomeFragment extends Component {
                       );
                     case 2:
                       let productsData = [];
+
                       if (!item.loaded) {
                         item.products.forEach((id, index) => {
                           firestore
@@ -723,6 +806,18 @@ export class HomeFragment extends Component {
                       // }
                       return (
                         <HorizontalScroller
+                          edit={() => {
+                            this.setState({
+                              view_type: item.view_type,
+                              position: item.index,
+                              addDialog: true,
+                              editMode: true,
+                              doc_id: item.id,
+                              selectedProducts: item.products,
+                              layout_title: item.layout_title,
+                              layout_bg: item.layout_background,
+                            });
+                          }}
                           delete={() =>
                             this.setState({ loading: true }, () => {
                               firestore
@@ -785,6 +880,18 @@ export class HomeFragment extends Component {
                       }
                       return (
                         <GridView
+                          edit={() => {
+                            this.setState({
+                              view_type: item.view_type,
+                              position: item.index,
+                              addDialog: true,
+                              editMode: true,
+                              doc_id: item.id,
+                              selectedProducts: item.products,
+                              layout_title: item.layout_title,
+                              layout_bg: item.layout_background,
+                            });
+                          }}
                           delete={() =>
                             this.setState({ loading: true }, () => {
                               firestore
@@ -846,6 +953,13 @@ export class HomeFragment extends Component {
                 onClick={(e) =>
                   this.setState({
                     addDialog: false,
+                    position: null,
+                    addDialog: false,
+                    images: [],
+                    colors: [],
+                    selectedProducts: [],
+                    layout_bg: "#ffffff",
+                    view_type: 0,
                   })
                 }
                 aria-label="close"
@@ -1002,6 +1116,7 @@ export class HomeFragment extends Component {
                     error={this.state.layout_titleError !== ""}
                     helperText={this.state.layout_titleError}
                     name="layout_title"
+                    defaultValue={this.state.layout_title}
                     variant="standard"
                   />
                 </Box>
@@ -1058,6 +1173,11 @@ export class HomeFragment extends Component {
                           <FormControlLabel
                             control={
                               <Checkbox
+                                defaultChecked={
+                                  this.state.selectedProducts.filter(
+                                    (x) => x.id === item.id
+                                  ).length > 0
+                                }
                                 onChange={(e) => {
                                   if (e.target.checked) {
                                     this.state.selectedProducts.push(item.id);
