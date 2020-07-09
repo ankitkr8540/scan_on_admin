@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Drawer from "@material-ui/core/Drawer";
 import AppBar from "@material-ui/core/AppBar";
@@ -20,6 +20,7 @@ import {
 } from "@material-ui/icons";
 import logo from "../media/logo.png";
 import HomeFragment from "../Fragments/HomeFragment";
+import ManageCategoryFragment from "../Fragments/ManageCategoryFragment";
 
 const drawerWidth = 240;
 
@@ -48,6 +49,18 @@ const useStyles = makeStyles((theme) => ({
 
 export default function ClippedDrawer() {
   const classes = useStyles();
+  const [fragment, setfragment] = useState("HOME");
+
+  const loadFragment = () => {
+    switch (fragment) {
+      case "HOME":
+        return <HomeFragment />;
+      case "MANAGE_CATEGORY":
+        return <ManageCategoryFragment />;
+      default:
+        break;
+    }
+  };
 
   return (
     <div className={classes.root}>
@@ -72,13 +85,13 @@ export default function ClippedDrawer() {
         <Toolbar />
         <div className={classes.drawerContainer}>
           <List>
-            <ListItem button>
+            <ListItem button onClick={(e) => setfragment("HOME")}>
               <ListItemIcon>
                 <Home />
               </ListItemIcon>
               <ListItemText primary="Home" />
             </ListItem>
-            <ListItem button>
+            <ListItem button onClick={(e) => setfragment("MANAGE_CATEGORY")}>
               <ListItemIcon>
                 <Category />
               </ListItemIcon>
@@ -115,7 +128,7 @@ export default function ClippedDrawer() {
       </Drawer>
       <main className={classes.content}>
         <Toolbar />
-        <HomeFragment />
+        {loadFragment()}
       </main>
     </div>
   );

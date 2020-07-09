@@ -164,6 +164,8 @@ export class HomeFragment extends Component {
           //error
         }
       );
+    } else {
+      this.setState({ loading: false });
     }
   }
 
