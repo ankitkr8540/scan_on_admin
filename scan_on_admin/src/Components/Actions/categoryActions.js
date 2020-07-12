@@ -22,3 +22,20 @@ export const loadCategories = (onSuccess, onError) => {
       });
   };
 };
+export const addCategory = (data, onSuccess, onError) => {
+  return (dispatch, getState) => {
+    firestore
+      .collection("CATAGORIES")
+      .doc(data.categoryName.toUpperCase())
+      .set(data)
+      .then(function (doc) {
+        dispatch({ type: "ADD_CATEGORY", payload: data });
+        onSuccess();
+      })
+      .catch((error) => {
+        console.log(error);
+        onError();
+        //error
+      });
+  };
+};

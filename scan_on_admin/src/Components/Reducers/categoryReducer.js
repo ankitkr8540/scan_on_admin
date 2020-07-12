@@ -5,6 +5,9 @@ const categoryReducer = (state = initState, action) => {
     case "LOAD_CATEGORIES":
       state = action.payload;
       break;
+    case "ADD_CATEGORY":
+      state = [...state, action.payload];
+      break;
     default:
       break;
   }
