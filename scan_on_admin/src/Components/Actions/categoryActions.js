@@ -12,6 +12,7 @@ export const loadCategories = (onSuccess, onError) => {
           querySnapshot.forEach((doc) => {
             catagories.push(doc.data());
           });
+          catagories.sort((a, b) => a.index - b.index);
           dispatch({ type: "LOAD_CATEGORIES", payload: catagories });
           onSuccess();
         }
@@ -30,6 +31,44 @@ export const addCategory = (data, onSuccess, onError) => {
       .set(data)
       .then(function (doc) {
         dispatch({ type: "ADD_CATEGORY", payload: data });
+        onSuccess();
+      })
+      .catch((error) => {
+        console.log(error);
+        onError();
+        //error
+      });
+  };
+};
+
+export const updateCategory = (data, onSuccess, onError) => {
+  return (dispatch, getState) => {
+    firestore
+      .collection("CATAGORIES")
+      .doc(data.categoryName.toUpperCase())
+      .update(data)
+      .then(function (doc) {
+        dispatch({ type: "UPDATE_CATEGORY", payload: data });
+        onSuccess();
+      })
+      .catch((error) => {
+        console.log(error);
+        onError();
+        //error
+      });
+  };
+};
+
+export const deleteCategory = (categoryName, onSuccess, onError) => {
+  return (dispatch, getState) => {
+    firestore
+      .collection("CATAGORIES")
+      .doc(categoryName.toUpperCase())
+      .delete()
+      .then(function (doc) {
+        dispatch({ type: "DELETE_CATEGORY", payload: categoryName });
+        dispatch({ type: "DELETE_PAGE", payload: categoryName });
+
         onSuccess();
       })
       .catch((error) => {

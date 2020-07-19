@@ -1,5 +1,5 @@
 import React, { Component, forwardRef } from "react";
-import { Container, Button } from "@material-ui/core";
+import { Container, Button, TextField } from "@material-ui/core";
 import MaterialTable from "material-table";
 import {
   AddBox,
@@ -17,10 +17,15 @@ import {
   ArrowDownward,
   Remove,
   ViewColumn,
+  Home,
 } from "@material-ui/icons";
 import { connect } from "react-redux";
 import { firestore, storageRef } from "../firebase";
-import { addCategory } from "../Components/Actions/categoryActions";
+import {
+  addCategory,
+  updateCategory,
+  deleteCategory,
+} from "../Components/Actions/categoryActions";
 
 const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -53,45 +58,63 @@ class ManageCategoryFragment extends Component {
     this.state = {
       columns: [
         { title: "Index", field: "index", type: "numeric" },
-        { title: "Category", field: "categoryName" },
+        {
+          title: "Category",
+          field: "categoryName",
+          editable: "onAdd",
+        },
         {
           title: "Icon",
           field: "Icon",
-          editComponent: (props) => (
-            <>
-              <input
-                accept="image/*"
-                id="contained-button-file"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    this.setState({
-                      image: e.target.files[0],
-                    });
-                    props.onChange(e.target.value);
-                    e.target.value = null;
-                  }
-                }}
-                hidden
-                name="image"
-                type="file"
-              />
-              <label htmlFor="contained-button-file">
-                {this.state.image ? (
-                  <img
-                    src={this.renderImageUrl(this.state.image)}
-                    style={{ width: 40, height: 40 }}
-                  />
-                ) : (
-                  <Button variant="contained" color="primary" component="span">
-                    Add Image
-                  </Button>
-                )}
-              </label>
-            </>
-          ),
-          render: (rowData) => (
-            <img src={rowData.Icon} style={{ width: 40, height: 40 }} />
-          ),
+          editComponent: (props) =>
+            props.value === "null" ? (
+              <Home />
+            ) : (
+              <>
+                <input
+                  accept="image/*"
+                  id="contained-button-file"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      this.setState({
+                        image: e.target.files[0],
+                      });
+                      props.onChange(e.target.value);
+                      e.target.value = null;
+                    }
+                  }}
+                  hidden
+                  name="image"
+                  type="file"
+                />
+                <label htmlFor="contained-button-file">
+                  {this.state.image || props.value ? (
+                    <img
+                      src={
+                        this.state.image
+                          ? this.renderImageUrl(this.state.image)
+                          : props.value
+                      }
+                      style={{ width: 40, height: 40 }}
+                    />
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      component="span"
+                    >
+                      Add Image
+                    </Button>
+                  )}
+                </label>
+              </>
+            ),
+          render: (rowData) =>
+            rowData.Icon === "null" ? (
+              <Home />
+            ) : (
+              <img src={rowData.Icon} style={{ width: 40, height: 40 }} />
+            ),
         },
       ],
     };
@@ -132,7 +155,9 @@ class ManageCategoryFragment extends Component {
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           console.log("Upload is " + progress + "% done");
         },
-        function (error) {},
+        function (error) {
+          //handle unsuccesfull uploads
+        },
         function () {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadUrl) => {
             onCompleted(downloadUrl);
@@ -140,6 +165,23 @@ class ManageCategoryFragment extends Component {
         }
       );
     }
+  };
+
+  deleteImage = (image, onComplete) => {
+    let splited_link = image.split("/");
+    let name = splited_link[splited_link.length - 1]
+      .split("?")[0]
+      .replace("bannerads%2F", ""); //banners can be added when change in storage folder from bannerads
+
+    storageRef
+      .child("categories/" + name)
+      .delete()
+      .then(() => {
+        onComplete(true);
+      })
+      .catch((err) => {
+        onComplete(false);
+      });
   };
   render() {
     return (
@@ -171,27 +213,44 @@ class ManageCategoryFragment extends Component {
                 }),
               onRowUpdate: (newData, oldData) =>
                 new Promise((resolve) => {
-                  setTimeout(() => {
+                  if (
+                    newData.index === oldData.index &&
+                    newData.Icon === oldData.Icon
+                  ) {
                     resolve();
-                    if (oldData) {
-                      this.setState((prevState) => {
-                        const data = [...prevState.data];
-                        data[data.indexOf(oldData)] = newData;
-                        return { ...prevState, data };
-                      });
-                    }
-                  }, 600);
+                    this.setState({
+                      image: null,
+                    });
+                  } else if (newData.Icon === oldData.Icon) {
+                    this.props.updateCategory(
+                      newData,
+                      () => resolve(),
+                      (error) => resolve()
+                    );
+                  } else {
+                    this.deleteImage(oldData.Icon, (success) => {
+                      if (success) {
+                        this.uploadImage((url) => {
+                          newData["Icon"] = url;
+                          this.props.update(
+                            newData,
+                            () => resolve(),
+                            (error) => resolve()
+                          );
+                        });
+                      } else {
+                        resolve();
+                      }
+                    });
+                  }
                 }),
               onRowDelete: (oldData) =>
                 new Promise((resolve) => {
-                  setTimeout(() => {
-                    resolve();
-                    this.setState((prevState) => {
-                      const data = [...prevState.data];
-                      data.splice(data.indexOf(oldData), 1);
-                      return { ...prevState, data };
-                    });
-                  }, 600);
+                  this.props.deleteCategory(
+                    oldData.categoryName,
+                    () => resolve(),
+                    (error) => resolve()
+                  );
                 }),
             }}
           />
@@ -210,6 +269,10 @@ const mapDispatchToProps = (dispatch) => {
   return {
     addCategory: (data, onSuccess, onError) =>
       dispatch(addCategory(data, onSuccess, onError)),
+    deleteCategory: (name, onSuccess, onError) =>
+      dispatch(deleteCategory(name, onSuccess, onError)),
+    updateCategory: (data, onSuccess, onError) =>
+      dispatch(updateCategory(data, onSuccess, onError)),
   };
 };
 

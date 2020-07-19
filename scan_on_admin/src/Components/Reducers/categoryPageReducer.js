@@ -5,6 +5,13 @@ const categoryPageReducer = (state = initState, action) => {
     case "LOAD_PAGE":
       state = { ...state, [action.catagory]: action.payload };
       break;
+    case "DELETE_PAGE":
+      let newState = state;
+      if (newState[action.payload]) {
+        delete newState[action.payload];
+      }
+      state = newState;
+      break;
     default:
       break;
   }
