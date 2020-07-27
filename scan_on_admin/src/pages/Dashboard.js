@@ -21,6 +21,7 @@ import {
 import logo from "../media/logo.png";
 import HomeFragment from "../Fragments/HomeFragment";
 import ManageCategoryFragment from "../Fragments/ManageCategoryFragment";
+import AddProduct from "../Fragments/AddProduct";
 
 const drawerWidth = 240;
 
@@ -57,6 +58,8 @@ export default function ClippedDrawer() {
         return <HomeFragment />;
       case "MANAGE_CATEGORY":
         return <ManageCategoryFragment />;
+      case "ADD_PRODUCT":
+        return <AddProduct />;
       default:
         break;
     }
@@ -97,7 +100,7 @@ export default function ClippedDrawer() {
               </ListItemIcon>
               <ListItemText primary="Categories" />
             </ListItem>
-            <ListItem button>
+            <ListItem button onClick={(e) => setfragment("ADD_PRODUCT")}>
               <ListItemIcon>
                 <Phonelink />
               </ListItemIcon>
