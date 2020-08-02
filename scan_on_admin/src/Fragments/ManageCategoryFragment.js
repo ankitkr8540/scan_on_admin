@@ -27,7 +27,7 @@ import {
   deleteCategory,
 } from "../Components/Actions/categoryActions";
 
-const tableIcons = {
+export const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
   Check: forwardRef((props, ref) => <Check {...props} ref={ref} />),
   Clear: forwardRef((props, ref) => <Clear {...props} ref={ref} />),
@@ -189,7 +189,8 @@ class ManageCategoryFragment extends Component {
         <Container maxWidth="md" fixed>
           <MaterialTable
             icons={tableIcons}
-            title="Editable Example"
+            title="Categories"
+            options={{ search: false, paging: false }}
             columns={this.state.columns}
             data={this.props.catagories}
             editable={{
