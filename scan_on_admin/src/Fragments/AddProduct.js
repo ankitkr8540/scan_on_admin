@@ -21,6 +21,25 @@ class AddProduct extends Component {
 
     this.state = {
       images: [],
+      coupon_type: "percentage",
+      product_title: { error: "", value: "" },
+      price: { error: "", value: "" },
+      cutted_price: { error: "", value: "" },
+      free_coupons: { error: "", value: "" },
+      coupon_title: { error: "", value: "" },
+      validity_period: { error: "", value: "" },
+      coupon_body: { error: "", value: "" },
+      lower_limit: { error: "", value: "" },
+      upper_limit: { error: "", value: "" },
+      percentage: { error: "", value: "" },
+      discount_amount: { error: "", value: "" },
+      max_quantity: { error: "", value: "" },
+      offers_applied: { error: "", value: "" },
+      description: { error: "", value: "" },
+      other_details: { error: "", value: "" },
+      stock_qantity: { error: "", value: "" },
+      tags: { error: "", value: "" },
+
       columns: [
         { title: "Key", field: "field" },
         { title: "Value", field: "value" },
@@ -69,13 +88,19 @@ class AddProduct extends Component {
     }
   };
 
+  onChange = (e) => {
+    this.setState({
+      [e.target.name]: { error: "", value: e.target.value },
+    });
+  };
   render() {
+    console.log(this.state.data);
     return (
       <Box bgcolor="#fff" boxShadow={1} p={4}>
+        <Typography variant="h5" gutterBottom>
+          New Product
+        </Typography>
         <Box display="flex" flexWrap="true">
-          <Typography variant="h5" gutterBottom>
-            New Product
-          </Typography>
           {this.state.images.map((item, index) => (
             <Box margin="12px">
               <img
@@ -128,6 +153,11 @@ class AddProduct extends Component {
           margin="normal"
           label="Product Title"
           id="outlined-size-small"
+          onChange={this.onChange}
+          name="product_title"
+          error={this.state.product_title.error !== ""}
+          helperText={this.state.product_title.error}
+          defaultValue={this.state.product_title.value}
           variant="outlined"
           size="small"
         />
@@ -135,6 +165,12 @@ class AddProduct extends Component {
         <TextField
           margin="normal"
           label="Price"
+          onChange={this.onChange}
+          name="price"
+          type="number"
+          error={this.state.price.error !== ""}
+          helperText={this.state.price.error}
+          defaultValue={this.state.price.value}
           id="outlined-size-small"
           variant="outlined"
           size="small"
@@ -142,6 +178,12 @@ class AddProduct extends Component {
         <TextField
           margin="normal"
           style={{ marginLeft: "16px" }}
+          onChange={this.onChange}
+          name="cutted_price"
+          type="number"
+          error={this.state.cutted_price.error !== ""}
+          helperText={this.state.cutted_price.error}
+          defaultValue={this.state.cutted_price.value}
           label="Cutted Price"
           id="outlined-size-small"
           variant="outlined"
@@ -150,6 +192,12 @@ class AddProduct extends Component {
         <br />
         <TextField
           margin="normal"
+          onChange={this.onChange}
+          name="free_coupons"
+          type="number"
+          error={this.state.free_coupons.error !== ""}
+          helperText={this.state.free_coupons.error}
+          defaultValue={this.state.free_coupons.value}
           label="Free coupons"
           id="outlined-size-small"
           variant="outlined"
@@ -157,18 +205,42 @@ class AddProduct extends Component {
         />
         <br />
         <FormControlLabel
-          control={<Switch name="checkedB" color="primary" />}
+          control={
+            <Switch
+              name="attach_coupon"
+              color="primary"
+              onChange={(e) =>
+                this.setState({
+                  attachCoupon: e.target.checked,
+                })
+              }
+            />
+          }
           label="Attach Coupon"
         />
-        <Box border={1} p={3} borderRadius={8}>
-          <RadioGroup aria-label="gender" name="gender1" value="female">
+        <Box
+          border={1}
+          p={3}
+          borderRadius={8}
+          hidden={!this.state.attachCoupon}
+        >
+          <RadioGroup
+            aria-label="gender"
+            name="coupon_type"
+            onChange={(e) =>
+              this.setState({
+                coupon_type: e.target.value,
+              })
+            }
+            defaultValue="percentage"
+          >
             <FormControlLabel
-              value="female"
+              value="percentage"
               control={<Radio />}
               label="Discount"
             />
             <FormControlLabel
-              value="male"
+              value="flat_rs_off"
               control={<Radio />}
               label="Flat Rs.*OFF"
             />
@@ -176,6 +248,11 @@ class AddProduct extends Component {
           <TextField
             margin="normal"
             label="Coupon title"
+            onChange={this.onChange}
+            name="coupon_title"
+            error={this.state.coupon_title.error !== ""}
+            helperText={this.state.coupon_title.error}
+            defaultValue={this.state.coupon_title.value}
             id="outlined-size-small"
             variant="outlined"
             size="small"
@@ -183,7 +260,13 @@ class AddProduct extends Component {
           <TextField
             label="Valid for Days"
             style={{ marginLeft: "16px" }}
+            onChange={this.onChange}
+            name="validity_period"
+            type="number"
             margin="normal"
+            error={this.state.validity_period.error !== ""}
+            helperText={this.state.validity_period.error}
+            defaultValue={this.state.validity_period.value}
             id="outlined-size-small"
             variant="outlined"
             size="small"
@@ -193,16 +276,26 @@ class AddProduct extends Component {
             id="outlined-multiline-static"
             margin="normal"
             label="Coupon body"
+            onChange={this.onChange}
+            name="coupon_body"
+            error={this.state.coupon_body.error !== ""}
+            helperText={this.state.coupon_body.error}
+            defaultValue={this.state.coupon_body.value}
             multiline
             fullWidth
             rows={4}
-            defaultValue="Default Value"
             variant="outlined"
           />
           <br />
           <TextField
             margin="normal"
             label="Lower Limit"
+            onChange={this.onChange}
+            name="lower_limit"
+            type="number"
+            error={this.state.lower_limit.error !== ""}
+            helperText={this.state.lower_limit.error}
+            defaultValue={this.state.lower_limit.value}
             id="outlined-size-small"
             variant="outlined"
             size="small"
@@ -210,25 +303,60 @@ class AddProduct extends Component {
           <TextField
             margin="normal"
             style={{ marginLeft: "16px" }}
+            onChange={this.onChange}
+            name="upper_limit"
             label="Upper Limit"
+            type="number"
+            error={this.state.upper_limit.error !== ""}
+            helperText={this.state.upper_limit.error}
+            defaultValue={this.state.upper_limit.value}
             id="outlined-size-small"
             variant="outlined"
             size="small"
           />
-          <TextField
-            margin="normal"
-            style={{ marginLeft: "16px" }}
-            label="Percentage"
-            id="outlined-size-small"
-            variant="outlined"
-            size="small"
-          />
+          {this.state.coupon_type === "percentage" ? (
+            <TextField
+              margin="normal"
+              style={{ marginLeft: "16px" }}
+              label="Percentage"
+              onChange={this.onChange}
+              name="percentage"
+              type="number"
+              error={this.state.percentage.error !== ""}
+              helperText={this.state.percentage.error}
+              defaultValue={this.state.percentage.value}
+              id="outlined-size-small"
+              variant="outlined"
+              size="small"
+            />
+          ) : (
+            <TextField
+              margin="normal"
+              style={{ marginLeft: "16px" }}
+              label="Discount Amount"
+              onChange={this.onChange}
+              name="discount_amount"
+              type="number"
+              error={this.state.discount_amount.error !== ""}
+              helperText={this.state.discount_amount.error}
+              defaultValue={this.state.discount_amount.value}
+              id="outlined-size-small"
+              variant="outlined"
+              size="small"
+            />
+          )}
         </Box>
         <br />
         <TextField
           label="Max-Quantity"
           margin="normal"
+          onChange={this.onChange}
+          name="max_quantity"
+          type="number"
           id="outlined-size-small"
+          error={this.state.max_quantity.error !== ""}
+          helperText={this.state.max_quantity.error}
+          defaultValue={this.state.max_quantity.value}
           variant="outlined"
           size="small"
         />
@@ -236,6 +364,12 @@ class AddProduct extends Component {
           label="Offers applied"
           style={{ marginLeft: "16px" }}
           margin="normal"
+          onChange={this.onChange}
+          name="offers_applied"
+          type="number"
+          error={this.state.offers_applied.error !== ""}
+          helperText={this.state.offers_applied.error}
+          defaultValue={this.state.offers_applied.value}
           id="outlined-size-small"
           variant="outlined"
           size="small"
@@ -245,38 +379,50 @@ class AddProduct extends Component {
           id="outlined-multiline-static"
           fullWidth
           label="Description"
+          onChange={this.onChange}
+          name="description"
           margin="normal"
+          error={this.state.description.error !== ""}
+          helperText={this.state.description.error}
+          defaultValue={this.state.description.value}
           multiline
           rows={4}
-          defaultValue="Default Value"
           variant="outlined"
         />
         <br />
         <FormControlLabel
-          control={<Switch name="checkedB" color="primary" />}
-          label="Use Tab layout"
+          control={
+            <Switch
+              name="use_tab_layout"
+              color="primary"
+              onChange={(e) =>
+                this.setState({
+                  useTabLayout: e.target.checked,
+                })
+              }
+            />
+          }
+          label="Use Tab Layout"
         />
-        <MaterialTable
-          icons={tableIcons}
-          title="Specifications"
-          options={{ search: false, paging: false }}
-          columns={this.state.columns}
-          data={this.state.data}
-          editable={{
-            onRowAdd: (newData) =>
-              new Promise((resolve) => {
-                setTimeout(() => {
+        {this.state.useTabLayout && (
+          <MaterialTable
+            icons={tableIcons}
+            title="Specifications"
+            options={{ search: false, paging: false }}
+            columns={this.state.columns}
+            data={this.state.data}
+            editable={{
+              onRowAdd: (newData) =>
+                new Promise((resolve) => {
                   resolve();
                   this.setState((prevState) => {
                     const data = [...prevState.data];
                     data.push(newData);
                     return { ...prevState, data };
                   });
-                }, 600);
-              }),
-            onRowUpdate: (newData, oldData) =>
-              new Promise((resolve) => {
-                setTimeout(() => {
+                }),
+              onRowUpdate: (newData, oldData) =>
+                new Promise((resolve) => {
                   resolve();
                   if (oldData) {
                     this.setState((prevState) => {
@@ -285,30 +431,32 @@ class AddProduct extends Component {
                       return { ...prevState, data };
                     });
                   }
-                }, 600);
-              }),
-            onRowDelete: (oldData) =>
-              new Promise((resolve) => {
-                setTimeout(() => {
+                }),
+              onRowDelete: (oldData) =>
+                new Promise((resolve) => {
                   resolve();
                   this.setState((prevState) => {
                     const data = [...prevState.data];
                     data.splice(data.indexOf(oldData), 1);
                     return { ...prevState, data };
                   });
-                }, 600);
-              }),
-          }}
-        />
+                }),
+            }}
+          />
+        )}
         <br />
         <TextField
           id="outlined-multiline-static"
           label="Other Details"
           margin="normal"
+          onChange={this.onChange}
+          name="other_details"
+          error={this.state.other_details.error !== ""}
+          helperText={this.state.other_details.error}
+          defaultValue={this.state.other_details.value}
           fullWidth
           multiline
           rows={4}
-          defaultValue="Default Value"
           variant="outlined"
         />
         <br />
@@ -316,12 +464,28 @@ class AddProduct extends Component {
           label="Stock Quantity"
           id="outlined-size-small"
           variant="outlined"
+          onChange={this.onChange}
+          name="stock_quantity"
+          type="number"
+          error={this.state.stock_qantity.error !== ""}
+          helperText={this.state.stock_qantity.error}
+          defaultValue={this.state.stock_qantity.value}
           margin="normal"
           size="small"
         />
         <br />
         <FormControlLabel
-          control={<Switch name="checkedB" color="primary" />}
+          control={
+            <Switch
+              name="COD"
+              color="primary"
+              onChange={(e) =>
+                this.setState({
+                  COD: e.target.checked,
+                })
+              }
+            />
+          }
           label="COD"
         />
         <br />
@@ -329,8 +493,13 @@ class AddProduct extends Component {
           label="Tags"
           margin="normal"
           id="outlined-size-small"
+          onChange={this.onChange}
+          name="tags"
           variant="outlined"
           size="small"
+          error={this.state.tags.error !== ""}
+          helperText={this.state.tags.error}
+          defaultValue={this.state.tags.value}
         />
       </Box>
     );
