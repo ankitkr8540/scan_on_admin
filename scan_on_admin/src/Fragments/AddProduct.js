@@ -10,22 +10,27 @@ import {
   Typography,
   RadioGroup,
   Radio,
+  Backdrop,
+  CircularProgress,
 } from "@material-ui/core";
 import { Delete, FormatColorFill } from "@material-ui/icons";
 import MaterialTable from "material-table";
 import { tableIcons } from "../Fragments/ManageCategoryFragment";
+import { firestore, storageRef } from "../firebase";
 
 class AddProduct extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      loading: false,
       images: [],
+      COD: false,
       coupon_type: "percentage",
       product_title: { error: "", value: "" },
       price: { error: "", value: "" },
-      cutted_price: { error: "", value: "" },
-      free_coupons: { error: "", value: "" },
+      cutted_price: { error: "", value: "0" },
+      free_coupons: { error: "", value: "0" },
       coupon_title: { error: "", value: "" },
       validity_period: { error: "", value: "" },
       coupon_body: { error: "", value: "" },
@@ -34,7 +39,7 @@ class AddProduct extends Component {
       percentage: { error: "", value: "" },
       discount_amount: { error: "", value: "" },
       max_quantity: { error: "", value: "" },
-      offers_applied: { error: "", value: "" },
+      offers_applied: { error: "", value: "0" },
       description: { error: "", value: "" },
       other_details: { error: "", value: "" },
       stock_qantity: { error: "", value: "" },
@@ -93,6 +98,127 @@ class AddProduct extends Component {
       [e.target.name]: { error: "", value: e.target.value },
     });
   };
+
+  uploadImages = (images, index, urls, onCompleted) => {
+    const uploadAgain = (images, index, urls, onCompleted) =>
+      this.uploadImages(images, index, urls, onCompleted);
+    let file = images[index];
+    try {
+      if (file.startsWith("https")) {
+        urls.push(file);
+        index++;
+        if (index < images.length) {
+          uploadAgain(images, index, urls, onCompleted);
+        } else {
+          onCompleted();
+        }
+      }
+    } catch (error) {
+      var ts = String(new Date().getTime()),
+        i = 0;
+      this.state.out = "";
+      for (i = 0; i < ts.length; i += 2) {
+        this.state.out += Number(ts.substr(i, 2)).toString(36);
+      }
+
+      let filename = "banner" + this.state.out;
+
+      var uploadTask = storageRef
+        .child("products/" + filename + ".jpg")
+        .put(file); // change the name of bannerads to banners
+
+      uploadTask.on(
+        "state_changed",
+        function (snapshot) {
+          var progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log("Upload is " + progress + "% done");
+        },
+        function (error) {},
+        function () {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadUrl) => {
+            urls.push(downloadUrl);
+            index++;
+            if (index < images.length) {
+              uploadAgain(images, index, urls, onCompleted);
+            } else {
+              onCompleted();
+            }
+          });
+        }
+      );
+    }
+  };
+
+  uploadProduct = (e) => {
+    if (this.state.images.length === 0) {
+      return;
+    }
+    if (this.state.useTabLayout && this.state.data.length === 0) {
+      return;
+    }
+    let mandatoryFields = [
+      "product_title",
+      "price",
+      "max_quantity",
+      "description",
+      "other_details",
+      "stock_qantity",
+      "tags",
+    ];
+    if (this.state.attachCoupon) {
+      let couponsFields = [
+        "coupon_title",
+        "validity_period",
+        "coupon_body",
+        "lower_limit",
+        "upper_limit",
+        "percentage",
+        "discount_amount",
+      ];
+      mandatoryFields = [...mandatoryFields, ...couponsFields];
+    }
+    let uploadSignal = true;
+    mandatoryFields.forEach((element) => {
+      let field = this.state[element];
+      if (field.value === "") {
+        field.error = "Required!";
+        uploadSignal = false;
+      }
+    });
+    if (!uploadSignal) {
+      this.setState({});
+      return;
+    }
+
+    let index = 0;
+    let urls = [];
+    this.setState({
+      loading: true,
+    });
+
+    this.uploadImages(this.state.images, index, urls, () => {
+      let data = {
+        no_of_product_images: urls.length,
+        product_title: this.state.product_title.value,
+        product_price: this.state.price.value,
+        product_other_details: this.state.other_details.value,
+        COD: this.state.COD,
+        cutted_price: this.state.cutted_price.value,
+        ["max-quantity"]: this.state.max_quantity.value,
+      };
+      if (this.state.attachCoupon) {
+        data["free_coupen_body"] = this.state.coupon_body.value; /////////////////////////data['free_coupon_body'] = this.state.coupon_body.value
+        data["free_coupen_title"] = this.state.coupon_title.value;
+        data["free_coupens"] = this.state.free_coupons.value;
+        data["free_coupen_body"] = this.state.free_coupon_body.value;
+      }
+      urls.forEach((url, index) => {
+        data["product_image_" + (index + 1)] = url;
+      });
+    });
+  };
+
   render() {
     console.log(this.state.data);
     return (
@@ -495,12 +621,26 @@ class AddProduct extends Component {
           id="outlined-size-small"
           onChange={this.onChange}
           name="tags"
+          fullWidth
           variant="outlined"
           size="small"
           error={this.state.tags.error !== ""}
           helperText={this.state.tags.error}
           defaultValue={this.state.tags.value}
         />
+        <br />
+        <Button
+          variant="contained"
+          fullWidth
+          color="primary"
+          component="span"
+          onClick={this.uploadProduct}
+        >
+          Upload
+        </Button>
+        <Backdrop style={{ zIndex: 1500 }} open={this.state.loading}>
+          <CircularProgress color="primary" />
+        </Backdrop>
       </Box>
     );
   }
