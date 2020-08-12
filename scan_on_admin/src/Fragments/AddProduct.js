@@ -16,7 +16,7 @@ import {
 import { Delete, FormatColorFill } from "@material-ui/icons";
 import MaterialTable from "material-table";
 import { tableIcons } from "../Fragments/ManageCategoryFragment";
-import { firestore, storageRef } from "../firebase";
+import firebase, { firestore, storageRef } from "../firebase";
 
 class AddProduct extends Component {
   constructor(props) {
@@ -42,7 +42,7 @@ class AddProduct extends Component {
       offers_applied: { error: "", value: "0" },
       description: { error: "", value: "" },
       other_details: { error: "", value: "" },
-      stock_qantity: { error: "", value: "" },
+      stock_quantity: { error: "", value: "" },
       tags: { error: "", value: "" },
 
       columns: [
@@ -163,7 +163,7 @@ class AddProduct extends Component {
       "max_quantity",
       "description",
       "other_details",
-      "stock_qantity",
+      "stock_quantity",
       "tags",
     ];
     if (this.state.attachCoupon) {
@@ -173,9 +173,12 @@ class AddProduct extends Component {
         "coupon_body",
         "lower_limit",
         "upper_limit",
-        "percentage",
-        "discount_amount",
       ];
+      if (this.state.coupon_type === "percentage") {
+        couponsFields.push("percentage");
+      } else {
+        couponsFields.push("discount_amount");
+      }
       mandatoryFields = [...mandatoryFields, ...couponsFields];
     }
     let uploadSignal = true;
@@ -199,6 +202,7 @@ class AddProduct extends Component {
 
     this.uploadImages(this.state.images, index, urls, () => {
       let data = {
+        added_on: firebase.firestore.Timestamp.fromDate(new Date()),
         no_of_product_images: urls.length,
         product_title: this.state.product_title.value,
         product_price: this.state.price.value,
@@ -206,16 +210,85 @@ class AddProduct extends Component {
         COD: this.state.COD,
         cutted_price: this.state.cutted_price.value,
         ["max-quantity"]: this.state.max_quantity.value,
+        offers_applied: this.state.offers_applied.value,
+        product_description: this.state.description.value,
+        stock_quantity: this.state.stock_quantity.value,
+        tags: this.state.tags.value.split(","),
       };
       if (this.state.attachCoupon) {
         data["free_coupen_body"] = this.state.coupon_body.value; /////////////////////////data['free_coupon_body'] = this.state.coupon_body.value
         data["free_coupen_title"] = this.state.coupon_title.value;
         data["free_coupens"] = this.state.free_coupons.value;
-        data["free_coupen_body"] = this.state.free_coupon_body.value;
+        data["lower_limit"] = this.state.lower_limit.value;
+        data["upper_limit"] = this.state.upper_limit.value;
+        data["validity"] = this.state.validity_period.value;
+
+        if (this.state.coupon_type === "percentage") {
+          data["percentage"] = this.state.percentage.value;
+        } else {
+          data["amount"] = this.state.discount_amount.value;
+        }
+      }
+      if (this.state.useTabLayout) {
+        let sectionCount = 0;
+        let index = 0;
+
+        this.state.data.forEach((row) => {
+          if (row.field === "title" || row.field === "Title") {
+            if (sectionCount > 0) {
+              data["spec_title_" + sectionCount + "_total_fields"] = index;
+            }
+            index = 0;
+            sectionCount++;
+            data["spec_title_" + sectionCount] = row.value;
+          } else {
+            index++;
+            data["spec_title_" + sectionCount + "_field_" + index + "_name"] =
+              row.field;
+            data["spec_title_" + sectionCount + "_field_" + index + "_value"] =
+              row.value;
+          }
+        });
+        data["total_spec_titles"] = sectionCount;
       }
       urls.forEach((url, index) => {
         data["product_image_" + (index + 1)] = url;
       });
+      firestore
+        .collection("PRODUCTS")
+        .add(data)
+        .then(function (doc) {
+          let docId = doc.Id;
+          for (
+            let index = 0;
+            index < parseInt(this.state.stock_quantity.value);
+            index++
+          ) {
+            firestore
+              .collection("PRODUCTS")
+              .doc(docId)
+              .collection("QUANTITY")
+              .add({ time: firebase.firestore.Timestamp.fromDate(new Date()) })
+              .then(function (doc) {
+                this.setState({
+                  loading: false,
+                });
+                //uploaded successfully
+              })
+              .catch((err) => {
+                this.setState({
+                  loading: false,
+                });
+                //error
+              });
+          }
+        })
+        .catch((err) => {
+          this.setState({
+            loading: false,
+          });
+          //error
+        });
     });
   };
 
@@ -593,9 +666,9 @@ class AddProduct extends Component {
           onChange={this.onChange}
           name="stock_quantity"
           type="number"
-          error={this.state.stock_qantity.error !== ""}
-          helperText={this.state.stock_qantity.error}
-          defaultValue={this.state.stock_qantity.value}
+          error={this.state.stock_quantity.error !== ""}
+          helperText={this.state.stock_quantity.error}
+          defaultValue={this.state.stock_quantity.value}
           margin="normal"
           size="small"
         />
